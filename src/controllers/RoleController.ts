@@ -22,6 +22,7 @@ export class RoleController {
     public getAll = async (req: Request, res: Response): Promise<void> => {
         try {
             const roles = await this.roleRepository.find();
+
             if (roles.length === 0) {
                 ResponseHandler.sendErrorResponse(res, StatusCodes.NO_CONTENT);
                 return;
@@ -35,7 +36,9 @@ export class RoleController {
     };
 
     public getById = async (req: Request, res: Response): Promise<void> => {
+
         const id = parseInt(req.params.id as string);
+
         if (isNaN(id)) {
             ResponseHandler.sendErrorResponse(res,
                 StatusCodes.BAD_REQUEST,
@@ -45,12 +48,14 @@ export class RoleController {
 
         try {
             const role = await this.roleRepository.findOne({ where: { id: id } });
+
             if (!role) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.NOT_FOUND,
                     RoleController.ERROR_ROLE_NOT_FOUND_WITH_ID(id));
                 return;
             }
+
             ResponseHandler.sendSuccessResponse(res, role);
         } catch (error) {
             ResponseHandler.sendErrorResponse(res,
@@ -63,11 +68,14 @@ export class RoleController {
         try {
             const role = new Role();
             role.name = req.body.name;
+            
             const errors = await validate(role);
             if (errors.length > 0) {
                 throw new Error(errors.map(err => Object.values(err.constraints || {})).join(", "));
             }
+
             const newRole = await this.roleRepository.save(role);
+
             ResponseHandler.sendSuccessResponse(res, newRole, StatusCodes.CREATED);
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
@@ -75,7 +83,9 @@ export class RoleController {
     };
 
     public delete = async (req: Request, res: Response): Promise<void> => {
+
         const id = req.params.id;
+
         try {
             if (!id) {
                 ResponseHandler.sendErrorResponse(res,
@@ -83,13 +93,16 @@ export class RoleController {
                     RoleController.ERROR_NO_ID_PROVIDED);
                 return;
             }
+
             const result = await this.roleRepository.delete(id);
+
             if (result.affected === 0) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.NOT_FOUND,
                     RoleController.ERROR_ROLE_NOT_FOUND_FOR_DELETION);
                 return;
             }
+
             ResponseHandler.sendSuccessResponse(res, "Role deleted");
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, error.message);
@@ -97,14 +110,17 @@ export class RoleController {
     };
 
     public update = async (req: Request, res: Response): Promise<void> => {
+        
         const id = parseInt(req.params.id as string);
         const name = req.body.name;
+
         if (isNaN(id)) {
             ResponseHandler.sendErrorResponse(res,
                 StatusCodes.BAD_REQUEST,
                 RoleController.ERROR_NO_ID_PROVIDED);
             return;
         }
+        
         try {
             if (!id) {
                 ResponseHandler.sendErrorResponse(res,
@@ -112,19 +128,25 @@ export class RoleController {
                     RoleController.ERROR_NO_ID_PROVIDED);
                 return;
             }
+
             const role = await this.roleRepository.findOneBy({ id });
+
             if (!role) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.NOT_FOUND,
                     RoleController.ERROR_ROLE_NOT_FOUND);
                 return;
             }
+
             if (name !== undefined) role.name = name;
+
             const errors = await validate(role);
             if (errors.length > 0) {
                 throw new Error(errors.map(err => Object.values(err.constraints || {})).join(", "));
             }
+
             const updatedRole = await this.roleRepository.save(role);
+            
             ResponseHandler.sendSuccessResponse(res, updatedRole);
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);

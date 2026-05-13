@@ -540,3 +540,49 @@
 {"level":"info","message":"::1 - - [12/May/2026:23:54:43 +0000] \"POST /api/login HTTP/1.1\" 202 227 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 00:54:43"}
 {"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 00:54:46"}
 {"level":"info","message":"::1 - - [12/May/2026:23:54:46 +0000] \"DELETE /api/leave-requests HTTP/1.1\" 200 204 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 00:54:46"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 00:57:01"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 00:57:01"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 01:08:48"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 01:08:48"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 01:12:07"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 01:12:07"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 01:13:35"}
+{"0":"2","1":"0","10":"T","11":"0","12":"0","13":":","14":"1","15":"3","16":":","17":"3","18":"5","19":".","2":"2","20":"7","21":"4","22":"4","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: Request is already cancelled","timestamp":"2026-05-13 01:13:35"}
+{"level":"info","message":"::1 - - [13/May/2026:00:13:35 +0000] \"DELETE /api/leave-requests HTTP/1.1\" 400 104 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 01:13:35"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 01:13:49"}
+{"level":"info","message":"::1 - - [13/May/2026:00:13:49 +0000] \"DELETE /api/leave-requests HTTP/1.1\" 200 204 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 01:13:49"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 01:14:01"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 01:14:01"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 01:17:26"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 01:17:26"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 01:17:28"}
+{"level":"info","message":"::1 - - [13/May/2026:00:17:28 +0000] \"DELETE /api/leave-requests HTTP/1.1\" 200 217 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 01:17:28"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 03:05:50"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 03:05:50"}
+{"level":"info","message":"user-management accessed by ::1","timestamp":"2026-05-13 03:08:12"}
+{"level":"info","message":"::1 - - [13/May/2026:02:08:12 +0000] \"POST /api/user-management HTTP/1.1\" 201 106 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:08:12"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 03:08:34"}
+{"level":"info","message":"::1 - - [13/May/2026:02:08:34 +0000] \"POST /api/login HTTP/1.1\" 202 232 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:08:34"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 03:08:41"}
+{"0":"2","1":"0","10":"T","11":"0","12":"2","13":":","14":"0","15":"8","16":":","17":"4","18":"1","19":".","2":"2","20":"2","21":"9","22":"7","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: Unknown column 'NaN' in 'where clause'","timestamp":"2026-05-13 03:08:41"}
+{"level":"info","message":"::1 - - [13/May/2026:02:08:41 +0000] \"PATCH /api/leave-requests/approve HTTP/1.1\" 400 114 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:08:41"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 03:18:33"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 03:18:33"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 03:18:43"}
+{"level":"info","message":"::1 - - [13/May/2026:02:18:43 +0000] \"POST /api/login HTTP/1.1\" 202 232 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:18:43"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 03:18:47"}
+{"0":"2","1":"0","10":"T","11":"0","12":"2","13":":","14":"1","15":"8","16":":","17":"4","18":"7","19":".","2":"2","20":"3","21":"4","22":"4","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: Unknown column 'NaN' in 'where clause'","timestamp":"2026-05-13 03:18:47"}
+{"level":"info","message":"::1 - - [13/May/2026:02:18:47 +0000] \"PATCH /api/leave-requests/approve HTTP/1.1\" 400 114 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:18:47"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 03:19:52"}
+{"level":"info","message":"::1 - - [13/May/2026:02:19:52 +0000] \"PATCH /api/leave-requests/approve HTTP/1.1\" 200 97 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:19:52"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 03:20:19"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 03:20:19"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 03:20:49"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 03:20:49"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 03:20:52"}
+{"0":"2","1":"0","10":"T","11":"0","12":"2","13":":","14":"2","15":"0","16":":","17":"5","18":"2","19":".","2":"2","20":"0","21":"9","22":"0","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: Only pending requests can be approved","timestamp":"2026-05-13 03:20:52"}
+{"level":"info","message":"::1 - - [13/May/2026:02:20:52 +0000] \"PATCH /api/leave-requests/approve HTTP/1.1\" 400 113 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:20:52"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 03:21:32"}
+{"level":"info","message":"::1 - - [13/May/2026:02:21:32 +0000] \"PATCH /api/leave-requests/approve HTTP/1.1\" 200 110 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:21:32"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 03:22:11"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 03:22:11"}

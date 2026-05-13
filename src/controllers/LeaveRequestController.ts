@@ -8,6 +8,7 @@ import { StatusCodes } from 'http-status-codes';
 import { validate } from "class-validator";
 import { IAuthenticatedJWTRequest } from '../types/IAuthenticatedJWTRequest';
 import { Validation } from '../helpers/Validation';
+import { Logger } from '../helpers/Logger';
 
 
 export class LeaveRequestController {
@@ -123,7 +124,7 @@ export class LeaveRequestController {
         try {
             const userId = req.signedInUser?.id;
             const userRole = req.signedInUser?.role;
-            const { leaveRequestId } = req.body;
+            const { leaveRequestId, reason } = req.body;
 
             const request = await this.leaveRequestRepository.findOne({
                 where: { leaveRequestId: Number(leaveRequestId) },
@@ -139,11 +140,10 @@ export class LeaveRequestController {
             const isAdmin = userRole?.name == "admin";
 
             if (!isOwner && !isAdmin) {
-                ResponseHandler.sendErrorResponse(
-                    res,
-                    StatusCodes.FORBIDDEN,
-                    "You are not allowed to cancel this leave request"
+                Logger.warn(
+                    `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
+                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to cancel this leave request");
                 return;
             }
 
@@ -164,18 +164,19 @@ export class LeaveRequestController {
             }
 
             request.status = LeaveStatus.Cancelled;
+            request.reason = reason;
             await this.leaveRequestRepository.save(request);
 
             ResponseHandler.sendSuccessResponse(res, {
                 message: "Leave request cancelled successfully",
                 reason: request.reason,
                 data: {
-                        id: request.leaveRequestId,
-                        employee_id: request.user.id,
-                        start_date: request.startDate,
-                        end_date: request.endDate,
-                        status: request.status
-                    }
+                    id: request.leaveRequestId,
+                    employee_id: request.user.id,
+                    start_date: request.startDate,
+                    end_date: request.endDate,
+                    status: request.status
+                }
             });
 
         } catch (error: any) {
@@ -183,8 +184,72 @@ export class LeaveRequestController {
         }
     };
 
-    public approveLeave = async (req: Request, res: Response): Promise<void> => {
+    public approveLeave = async (req: IAuthenticatedJWTRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.signedInUser?.id;
+            const userRole = req.signedInUser?.role?.name;
+            const { leaveRequestId, reason } = req.body;
 
+            const request = await this.leaveRequestRepository.findOne({
+                where: { leaveRequestId: Number(leaveRequestId) },
+                relations: ["user"]
+            });
+
+            if (!request) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Leave request not found");
+                return;
+            }
+
+            if (request.status != LeaveStatus.Pending) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Only pending requests can be approved");
+                return;
+            }
+
+            const isAdmin = (userRole == "admin");
+            let isManagerOfStaff = false;
+
+            if (userRole == "manager") {
+                const manages = await this.userManagementRepository.findOne({
+                    where: {
+                        manager: { id: userId },
+                        user: { id: request.user.id }
+                    }
+                });
+                if (manages) { isManagerOfStaff = true; }
+            }
+
+            if (!isAdmin && !isManagerOfStaff) {
+                Logger.warn(
+                    `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
+                );
+                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to cancel this leave request");
+                return;
+            }
+
+            const daysRequested = Validation.daysBetween(request.startDate, request.endDate);
+
+            if (daysRequested > request.user.leaveBalance) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Insufficient leave balance");
+                return;
+            }
+
+            request.user.leaveBalance -= daysRequested;
+            request.status = LeaveStatus.Approved;
+            request.reason = reason;
+
+            await this.userRepository.save(request.user);
+            await this.leaveRequestRepository.save(request);
+
+            ResponseHandler.sendSuccessResponse(res, {
+                message: `Leave request ${request.leaveRequestId} for employee_id ${request.user.id} has been approved`,
+                data: {
+                    reason: request.reason
+                }
+            });
+
+        } catch (error: any) {
+            ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
+        }
     };
 
     public rejectLeave = async (req: Request, res: Response): Promise<void> => {

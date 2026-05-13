@@ -1,5 +1,4 @@
 import { Router } from "express";
-import { UserController } from '../controllers/UserController';
 import { IRouter } from "../types/IRouter";
 import { MiddlewareFactory } from "../helpers/MiddlewareFactory";
 import { LeaveRequestController } from "../controllers/LeaveRequestController";

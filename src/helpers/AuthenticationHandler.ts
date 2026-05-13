@@ -8,7 +8,7 @@ export function isAdmin(
     req: IAuthenticatedJWTRequest,
     res: Response,
     next: NextFunction
-) {
+) { 
 
     if (!req.signedInUser) {
         Logger.warn("Unauthorised access attempt: No signed-in user");
