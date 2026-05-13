@@ -126,6 +126,13 @@ export class LeaveRequestController {
             const userRole = req.signedInUser?.role;
             const { leaveRequestId, reason } = req.body;
 
+            if (isNaN(leaveRequestId)) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    "Invalid ID format");
+                return;
+            }
+
             const request = await this.leaveRequestRepository.findOne({
                 where: { leaveRequestId: Number(leaveRequestId) },
                 relations: ["user"]
@@ -190,6 +197,13 @@ export class LeaveRequestController {
             const userRole = req.signedInUser?.role?.name;
             const { leaveRequestId, reason } = req.body;
 
+            if (isNaN(leaveRequestId)) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    "Invalid ID format");
+                return;
+            }
+
             const request = await this.leaveRequestRepository.findOne({
                 where: { leaveRequestId: Number(leaveRequestId) },
                 relations: ["user"]
@@ -222,7 +236,7 @@ export class LeaveRequestController {
                 Logger.warn(
                     `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
-                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to cancel this leave request");
+                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to Approve this leave request");
                 return;
             }
 
@@ -252,16 +266,189 @@ export class LeaveRequestController {
         }
     };
 
-    public rejectLeave = async (req: Request, res: Response): Promise<void> => {
+    public rejectLeave = async (req: IAuthenticatedJWTRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.signedInUser?.id;
+            const userRole = req.signedInUser?.role?.name;
+            const { leaveRequestId, reason } = req.body;
 
+            if (isNaN(leaveRequestId)) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    "Invalid ID format");
+                return;
+            }
+
+            const request = await this.leaveRequestRepository.findOne({
+                where: { leaveRequestId: Number(leaveRequestId) },
+                relations: ["user"]
+            });
+
+            if (!request) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Leave request not found");
+                return;
+            }
+
+            if (request.status != LeaveStatus.Pending) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Only pending requests can be Rejected");
+                return;
+            }
+
+            const isAdmin = (userRole == "admin");
+            let isManagerOfStaff = false;
+
+            if (userRole == "manager") {
+                const manages = await this.userManagementRepository.findOne({
+                    where: {
+                        manager: { id: userId },
+                        user: { id: request.user.id }
+                    }
+                });
+                if (manages) { isManagerOfStaff = true; }
+            }
+
+            if (!isAdmin && !isManagerOfStaff) {
+                Logger.warn(
+                    `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
+                );
+                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to Reject this leave request");
+                return;
+            }
+
+            request.status = LeaveStatus.Rejected;
+            request.reason = reason;
+
+            await this.userRepository.save(request.user);
+            await this.leaveRequestRepository.save(request);
+
+            ResponseHandler.sendSuccessResponse(res, {
+                message: `Leave request ${request.leaveRequestId} for employee_id ${request.user.id} has been Rejected`,
+                data: {
+                    reason: request.reason
+                }
+            });
+
+        } catch (error: any) {
+            ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
+        }
     };
 
-    public leaveStatus = async (req: Request, res: Response): Promise<void> => {
+    public leaveStatus = async (req: IAuthenticatedJWTRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.signedInUser?.id;
+            const userRole = req.signedInUser?.role?.name;
+            const employeeId = parseInt(req.params.employee_id as string);
 
+            if (isNaN(employeeId)) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    "Invalid ID format");
+                return;
+            }
+
+            const employee = await this.userRepository.findOne({ where: { id: employeeId } });
+
+            if (!employee) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Employee not found");
+                return;
+            }
+
+            const isAdmin = (userRole == "admin");
+            const isManager = (userRole == "manager");
+            const isSelf = (userId == employeeId);
+            let isManagerOfStaff = false;
+
+            if (isManager) {
+                const manages = await this.userManagementRepository.findOne({
+                    where: {
+                        manager: { id: userId },
+                        user: { id: employeeId }
+                    }
+                });
+                if (manages) { isManagerOfStaff = true; }
+            }
+
+            if (!isAdmin && !isSelf && !isManagerOfStaff) {
+                Logger.warn(
+                    `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
+                );
+                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to view leave requests for this employee");
+                return;
+            }
+
+            const requests = await this.leaveRequestRepository.find({
+                where: { user: { id: employeeId } },
+            });
+
+            const formattedRequests = requests.map(request => ({
+                id: request.leaveRequestId,
+                start_date: request.startDate.toISOString().split("T")[0],
+                end_date: request.endDate.toISOString().split("T")[0],
+                status: request.status,
+                reason: request.reason
+            }));
+
+            ResponseHandler.sendSuccessResponse(res, {
+                message: `Status of leave requests for employee_id ${employeeId}`,
+                data: formattedRequests
+            });
+
+        } catch (error: any) {
+            ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
+        }
     };
 
-    public remainingDays = async (req: Request, res: Response): Promise<void> => {
+    public remainingDays = async (req: IAuthenticatedJWTRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.signedInUser?.id;
+            const userRole = req.signedInUser?.role?.name;
+            const employeeId = parseInt(req.params.employee_id as string);
 
+            if (isNaN(employeeId)) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    "Invalid ID format");
+                return;
+            }
+
+            const employee = await this.userRepository.findOne({ where: { id: employeeId } });
+
+            if (!employee) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Employee not found");
+                return;
+            }
+
+            const isAdmin = (userRole == "admin");
+            const isManager = (userRole == "manager");
+            const isSelf = (userId == employeeId);
+            let isManagerOfStaff = false;
+
+            if (isManager) {
+                const manages = await this.userManagementRepository.findOne({
+                    where: {
+                        manager: { id: userId },
+                        user: { id: employeeId }
+                    }
+                });
+                if (manages) { isManagerOfStaff = true; }
+            }
+
+            if (!isAdmin && !isSelf && !isManagerOfStaff) {
+                Logger.warn(
+                    `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
+                );
+                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to view leave requests for this employee");
+                return;
+            }
+
+            ResponseHandler.sendSuccessResponse(res, {
+                message: `Status of leave requests for employee_id ${employeeId}`,
+                data: {"days remaining" : employee.leaveBalance}
+            });
+
+        } catch (error: any) {
+            ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
+        }
     };
 
 

@@ -586,3 +586,58 @@
 {"level":"info","message":"::1 - - [13/May/2026:02:21:32 +0000] \"PATCH /api/leave-requests/approve HTTP/1.1\" 200 110 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 03:21:32"}
 {"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 03:22:11"}
 {"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 03:22:11"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 20:41:16"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 20:41:16"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 20:41:31"}
+{"level":"info","message":"::1 - - [13/May/2026:19:41:31 +0000] \"POST /api/login HTTP/1.1\" 202 228 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 20:41:31"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 20:42:05"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 20:42:05"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 20:42:07"}
+{"level":"info","message":"::1 - - [13/May/2026:19:42:07 +0000] \"POST /api/login HTTP/1.1\" 202 228 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 20:42:07"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 20:57:40"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 20:57:40"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 20:57:55"}
+{"level":"info","message":"::1 - - [13/May/2026:19:57:55 +0000] \"POST /api/login HTTP/1.1\" 202 232 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 20:57:55"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 20:58:09"}
+{"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-13 20:58:09"}
+{"0":"2","1":"0","10":"T","11":"1","12":"9","13":":","14":"5","15":"8","16":":","17":"0","18":"9","19":".","2":"2","20":"7","21":"0","22":"4","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: You are not allowed to Reject this leave request","timestamp":"2026-05-13 20:58:09"}
+{"level":"info","message":"::1 - - [13/May/2026:19:58:09 +0000] \"PATCH /api/leave-requests/reject HTTP/1.1\" 403 124 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 20:58:09"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 20:58:14"}
+{"level":"info","message":"::1 - - [13/May/2026:19:58:14 +0000] \"POST /api/login HTTP/1.1\" 202 227 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 20:58:14"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 20:58:17"}
+{"level":"info","message":"::1 - - [13/May/2026:19:58:17 +0000] \"PATCH /api/leave-requests/reject HTTP/1.1\" 200 126 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 20:58:17"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 20:58:37"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 20:58:37"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 21:00:12"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 21:00:12"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 22:47:03"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 22:47:03"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 22:57:38"}
+{"level":"info","message":"::1 - - [13/May/2026:21:57:39 +0000] \"GET /api/leave-requests/status/2 HTTP/1.1\" 200 75 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:57:39"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 22:57:53"}
+{"level":"info","message":"::1 - - [13/May/2026:21:57:53 +0000] \"GET /api/leave-requests/status/1 HTTP/1.1\" 200 75 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:57:53"}
+{"level":"info","message":"users accessed by ::1","timestamp":"2026-05-13 22:58:03"}
+{"0":"2","1":"0","10":"T","11":"2","12":"1","13":":","14":"5","15":"8","16":":","17":"0","18":"3","19":".","2":"2","20":"9","21":"1","22":"7","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: Duplicate entry 'admin@email.com' for key 'email'","timestamp":"2026-05-13 22:58:03"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:03 +0000] \"POST /api/users HTTP/1.1\" 400 125 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:03"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 22:58:12"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:12 +0000] \"POST /api/login HTTP/1.1\" 202 227 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:12"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 22:58:15"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:15 +0000] \"GET /api/leave-requests/status/1 HTTP/1.1\" 200 75 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:15"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 22:58:21"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:21 +0000] \"GET /api/leave-requests/status/2 HTTP/1.1\" 200 75 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:21"}
+{"level":"info","message":"login accessed by ::1","timestamp":"2026-05-13 22:58:26"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:26 +0000] \"POST /api/login HTTP/1.1\" 202 228 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:26"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 22:58:42"}
+{"level":"warn","message":"Unauthorised access attempt by staff1@email.com (role: staff)","timestamp":"2026-05-13 22:58:42"}
+{"0":"2","1":"0","10":"T","11":"2","12":"1","13":":","14":"5","15":"8","16":":","17":"4","18":"2","19":".","2":"2","20":"8","21":"2","22":"0","23":"Z","3":"6","4":"-","5":"0","6":"5","7":"-","8":"1","9":"3","level":"error","message":"[Error]: You are not allowed to view leave requests for this employee","timestamp":"2026-05-13 22:58:42"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:42 +0000] \"GET /api/leave-requests/status/1 HTTP/1.1\" 403 136 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:42"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 22:58:46"}
+{"level":"info","message":"::1 - - [13/May/2026:21:58:46 +0000] \"GET /api/leave-requests/status/3 HTTP/1.1\" 200 225 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 22:58:46"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 23:10:27"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 23:10:27"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 23:10:33"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 23:10:33"}
+{"level":"info","message":"leave-requests accessed by ::1","timestamp":"2026-05-13 23:10:35"}
+{"level":"info","message":"::1 - - [13/May/2026:22:10:35 +0000] \"GET /api/leave-requests/status/3 HTTP/1.1\" 200 166 \"-\" \"PostmanRuntime/7.54.0\"","timestamp":"2026-05-13 23:10:35"}
+{"level":"info","message":"Data Source initialised","timestamp":"2026-05-13 23:11:12"}
+{"level":"info","message":"Server running on http://localhost:8900","timestamp":"2026-05-13 23:11:12"}

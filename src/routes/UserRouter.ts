@@ -2,7 +2,7 @@ import { Router } from "express";
 import { UserController } from '../controllers/UserController';
 import { IRouter } from "../types/IRouter";
 import { MiddlewareFactory } from "../helpers/MiddlewareFactory";
-import { isAdmin } from "../helpers/AuthenticationHandler";
+import { isAdmin } from "../helpers/RouteAuthenticationHandler";
 
 export class UserRouter implements IRouter {
     authenticate: boolean = true;
