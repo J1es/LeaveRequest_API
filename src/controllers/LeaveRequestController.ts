@@ -119,8 +119,68 @@ export class LeaveRequestController {
         }
     };
 
-    public cancelLeave = async (req: Request, res: Response): Promise<void> => {
+    public cancelLeave = async (req: IAuthenticatedJWTRequest, res: Response): Promise<void> => {
+        try {
+            const userId = req.signedInUser?.id;
+            const userRole = req.signedInUser?.role;
+            const { leaveRequestId } = req.body;
 
+            const request = await this.leaveRequestRepository.findOne({
+                where: { leaveRequestId: Number(leaveRequestId) },
+                relations: ["user"]
+            });
+
+            if (!request) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Leave request not found");
+                return;
+            }
+
+            const isOwner = request.user.id == userId;
+            const isAdmin = userRole?.name == "admin";
+
+            if (!isOwner && !isAdmin) {
+                ResponseHandler.sendErrorResponse(
+                    res,
+                    StatusCodes.FORBIDDEN,
+                    "You are not allowed to cancel this leave request"
+                );
+                return;
+            }
+
+            if (request.status == LeaveStatus.Cancelled) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Request is already cancelled");
+                return;
+            }
+
+            if (request.status == LeaveStatus.Rejected) {
+                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Rejected requests cannot be cancelled");
+                return;
+            }
+
+            if (request.status == LeaveStatus.Approved) {
+                const days = Validation.daysBetween(request.startDate, request.endDate);
+                request.user.leaveBalance += days;
+                await this.userRepository.save(request.user);
+            }
+
+            request.status = LeaveStatus.Cancelled;
+            await this.leaveRequestRepository.save(request);
+
+            ResponseHandler.sendSuccessResponse(res, {
+                message: "Leave request cancelled successfully",
+                reason: request.reason,
+                data: {
+                        id: request.leaveRequestId,
+                        employee_id: request.user.id,
+                        start_date: request.startDate,
+                        end_date: request.endDate,
+                        status: request.status
+                    }
+            });
+
+        } catch (error: any) {
+            ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
+        }
     };
 
     public approveLeave = async (req: Request, res: Response): Promise<void> => {
