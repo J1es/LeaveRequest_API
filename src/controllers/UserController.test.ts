@@ -114,7 +114,7 @@ describe('UserController', () => {
 
         const req = mockRequest({}, { password: validManagerDetails.password, 
                                         email: validManagerDetails.email, 
-                                        roleId: validManagerDetails.role.id }); //roleId is expected in body 
+                                        roleId: validManagerDetails.role.id });
         const res = mockResponse();
 
         mockUserRepository.save.mockResolvedValue(validManagerDetails);

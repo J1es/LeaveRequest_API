@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Response } from 'express';
 import { LeaveRequest, LeaveStatus } from '../entity/LeaveRequest';
 import { User } from '../entity/User';
 import { UserManagement } from '../entity/UserManagement';
@@ -12,6 +12,19 @@ import { Logger } from '../helpers/Logger';
 
 
 export class LeaveRequestController {
+
+    public static readonly ERROR_INVALID_ID_FORMAT = "Invalid ID format";
+    public static readonly ERROR_INVALID_DATE_FORMAT = "Invalid Date format";
+    public static readonly ERROR_USER_NOT_FOUND = "User Not Found";
+    public static readonly ERROR_INSUFFICIENT_BALANCE = "Insufficient leave balance"
+    public static readonly ERROR_OVERLAPPING_DATES = "Date range of request overlaps with existing request";
+    public static readonly ERROR_LEAVE_REQUEST_NOT_FOUND = "Leave request not found";
+    public static readonly ERROR_NOT_ALLOWED = "You are not allowed to perform this action";
+    public static readonly ERROR_LEAVE_REQUEST_ALREADY_CANCELLED = "Request is already cancelled";
+    public static readonly ERROR_CANNOT_CANCEL_REJECTED = "Rejected requests cannot be cancelled";
+    public static readonly ERROR_ONLY_PENDING_APPROVED = "Only pending requests can be approved";
+    public static readonly ERROR_ONLY_PENDING_REJECTED = "Only pending requests can be rejected";
+    public static readonly ERROR_EMPLOYEE_NOT_FOUND = "Employee not found"
 
     constructor(private leaveRequestRepository: Repository<LeaveRequest>,
         private userManagementRepository: Repository<UserManagement>,
@@ -28,7 +41,7 @@ export class LeaveRequestController {
                 ResponseHandler.sendErrorResponse(
                     res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid employee ID"
+                    LeaveRequestController.ERROR_INVALID_ID_FORMAT
                 );
                 return
             }
@@ -42,7 +55,7 @@ export class LeaveRequestController {
                 ResponseHandler.sendErrorResponse(
                     res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid date format"
+                    LeaveRequestController.ERROR_INVALID_DATE_FORMAT
                 );
                 return
             }
@@ -51,14 +64,14 @@ export class LeaveRequestController {
             const user = await this.userRepository.findOne({ where: { id: userId } });
 
             if (!user) {
-                throw new Error("User not found")
+                throw new Error(LeaveRequestController.ERROR_USER_NOT_FOUND)
             }
 
             if (daysRequested > user.leaveBalance) {
                 ResponseHandler.sendErrorResponse(
                     res,
                     StatusCodes.BAD_REQUEST,
-                    "Days requested exceed remaining balance"
+                    LeaveRequestController.ERROR_INSUFFICIENT_BALANCE
                 );
                 return
             }
@@ -77,7 +90,7 @@ export class LeaveRequestController {
                 ResponseHandler.sendErrorResponse(
                     res,
                     StatusCodes.BAD_REQUEST,
-                    "Date range of request overlaps with existing request"
+                    LeaveRequestController.ERROR_OVERLAPPING_DATES
                 );
                 return
             }
@@ -129,7 +142,7 @@ export class LeaveRequestController {
             if (isNaN(leaveRequestId)) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid ID format");
+                    LeaveRequestController.ERROR_INVALID_ID_FORMAT);
                 return;
             }
 
@@ -139,7 +152,9 @@ export class LeaveRequestController {
             });
 
             if (!request) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Leave request not found");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.NOT_FOUND, 
+                    LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
                 return;
             }
 
@@ -150,17 +165,23 @@ export class LeaveRequestController {
                 Logger.warn(
                     `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
-                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to cancel this leave request");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.FORBIDDEN,
+                    LeaveRequestController.ERROR_NOT_ALLOWED);
                 return;
             }
 
             if (request.status == LeaveStatus.Cancelled) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Request is already cancelled");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    LeaveRequestController.ERROR_LEAVE_REQUEST_ALREADY_CANCELLED);
                 return;
             }
 
             if (request.status == LeaveStatus.Rejected) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Rejected requests cannot be cancelled");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    LeaveRequestController.ERROR_CANNOT_CANCEL_REJECTED);
                 return;
             }
 
@@ -200,7 +221,7 @@ export class LeaveRequestController {
             if (isNaN(leaveRequestId)) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid ID format");
+                    LeaveRequestController.ERROR_INVALID_ID_FORMAT);
                 return;
             }
 
@@ -210,12 +231,16 @@ export class LeaveRequestController {
             });
 
             if (!request) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Leave request not found");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.NOT_FOUND,
+                    LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
                 return;
             }
 
             if (request.status != LeaveStatus.Pending) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Only pending requests can be approved");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    LeaveRequestController.ERROR_ONLY_PENDING_APPROVED);
                 return;
             }
 
@@ -236,14 +261,18 @@ export class LeaveRequestController {
                 Logger.warn(
                     `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
-                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to Approve this leave request");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.FORBIDDEN,
+                    LeaveRequestController.ERROR_NOT_ALLOWED);
                 return;
             }
 
             const daysRequested = Validation.daysBetween(request.startDate, request.endDate);
 
             if (daysRequested > request.user.leaveBalance) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Insufficient leave balance");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    LeaveRequestController.ERROR_INSUFFICIENT_BALANCE);
                 return;
             }
 
@@ -275,7 +304,7 @@ export class LeaveRequestController {
             if (isNaN(leaveRequestId)) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid ID format");
+                    LeaveRequestController.ERROR_INVALID_ID_FORMAT);
                 return;
             }
 
@@ -285,12 +314,16 @@ export class LeaveRequestController {
             });
 
             if (!request) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Leave request not found");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.NOT_FOUND, 
+                    LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
                 return;
             }
 
             if (request.status != LeaveStatus.Pending) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, "Only pending requests can be Rejected");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    LeaveRequestController.ERROR_ONLY_PENDING_REJECTED);
                 return;
             }
 
@@ -311,7 +344,9 @@ export class LeaveRequestController {
                 Logger.warn(
                     `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
-                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to Reject this leave request");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.FORBIDDEN,
+                    LeaveRequestController.ERROR_NOT_ALLOWED);
                 return;
             }
 
@@ -342,14 +377,16 @@ export class LeaveRequestController {
             if (isNaN(employeeId)) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid ID format");
+                    LeaveRequestController.ERROR_INVALID_ID_FORMAT);
                 return;
             }
 
             const employee = await this.userRepository.findOne({ where: { id: employeeId } });
 
             if (!employee) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Employee not found");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.NOT_FOUND, 
+                    LeaveRequestController.ERROR_EMPLOYEE_NOT_FOUND);
                 return;
             }
 
@@ -372,7 +409,9 @@ export class LeaveRequestController {
                 Logger.warn(
                     `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
-                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to view leave requests for this employee");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.FORBIDDEN,
+                    LeaveRequestController.ERROR_NOT_ALLOWED);
                 return;
             }
 
@@ -407,14 +446,16 @@ export class LeaveRequestController {
             if (isNaN(employeeId)) {
                 ResponseHandler.sendErrorResponse(res,
                     StatusCodes.BAD_REQUEST,
-                    "Invalid ID format");
+                    LeaveRequestController.ERROR_INVALID_ID_FORMAT);
                 return;
             }
 
             const employee = await this.userRepository.findOne({ where: { id: employeeId } });
 
             if (!employee) {
-                ResponseHandler.sendErrorResponse(res, StatusCodes.NOT_FOUND, "Employee not found");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.NOT_FOUND,
+                    LeaveRequestController.ERROR_EMPLOYEE_NOT_FOUND);
                 return;
             }
 
@@ -437,7 +478,9 @@ export class LeaveRequestController {
                 Logger.warn(
                     `Unauthorised access attempt by ${req.signedInUser?.email} (role: ${req.signedInUser?.role?.name})`
                 );
-                ResponseHandler.sendErrorResponse(res, StatusCodes.FORBIDDEN, "You are not allowed to view leave requests for this employee");
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.FORBIDDEN,
+                    LeaveRequestController.ERROR_NOT_ALLOWED);
                 return;
             }
 
