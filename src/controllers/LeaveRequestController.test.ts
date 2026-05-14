@@ -9,8 +9,6 @@ import { Request, Response } from 'express';
 import * as classValidator from "class-validator";
 import { mock } from "jest-mock-extended";
 
-const INVALID_RECORD_NUMBER = 99;
-
 jest.mock('../helpers/ResponseHandler');
 
 jest.mock('class-validator', () => ({
@@ -38,9 +36,22 @@ describe('UserController', () => {
         role.name = 'staff';
 
         let user = new User();
-        user.id = 1;
+        user.id = 2;
         user.password = 'b'.repeat(10);
         user.email = 'staff@email.com';
+        user.role = role;
+        return user;
+    }
+
+    function getValidAdminData(): User {
+        let role = new Role();
+        role.id = 3;
+        role.name = 'admin';
+
+        let user = new User();
+        user.id = 3;
+        user.password = 'c'.repeat(10);
+        user.email = 'admin@email.com';
         user.role = role;
         return user;
     }

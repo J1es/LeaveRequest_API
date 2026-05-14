@@ -18,7 +18,7 @@ jest.mock('class-validator', () => ({
     validate: jest.fn(),
 }));
 
-describe('UserController', () => {
+describe('UserManagement', () => {
     function getValidManagerData(): User {
         let role = new Role();
         role.id = 1;
@@ -38,7 +38,7 @@ describe('UserController', () => {
         role.name = 'staff';
 
         let user = new User();
-        user.id = 1;
+        user.id = 2;
         user.password = 'b'.repeat(10);
         user.email = 'staff@email.com';
         user.role = role;
