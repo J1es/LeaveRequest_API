@@ -11,6 +11,9 @@ import { mock } from "jest-mock-extended";
 
 const INVALID_RECORD_NUMBER = 99;
 
+const VALIDATOR_CONSTRAINT_MANAGER_IS_REQUIRED = 'Manager is required';
+const VALIDATOR_CONSTRAINT_MANAGER_START_DATE_REQUIRED = 'Manager start date required';
+
 jest.mock('../helpers/ResponseHandler');
 
 jest.mock('class-validator', () => ({
@@ -18,7 +21,7 @@ jest.mock('class-validator', () => ({
     validate: jest.fn(),
 }));
 
-describe('UserManagement', () => {
+describe('UserManagementController', () => {
     function getValidManagerData(): User {
         let role = new Role();
         role.id = 1;
@@ -28,6 +31,7 @@ describe('UserManagement', () => {
         user.id = 1;
         user.password = 'a'.repeat(10);
         user.email = 'manager@email.com';
+        user.leaveBalance = 25;
         user.role = role;
         return user;
     }
@@ -41,6 +45,7 @@ describe('UserManagement', () => {
         user.id = 2;
         user.password = 'b'.repeat(10);
         user.email = 'staff@email.com';
+        user.leaveBalance = 25;
         user.role = role;
         return user;
     }
@@ -88,6 +93,67 @@ describe('UserManagement', () => {
             StatusCodes.OK);
     });
 
+    it('create will return BAD_REQUEST if no user id was provided', async () => {
+        const validManagementRecord = getValidManagementRecord();
+        const req = mockRequest({}, {
+            managerId: validManagementRecord.manager.id,
+            startDate: validManagementRecord.startDate
+        });
+        const res = mockResponse();
+
+        await userManagementController.create(req as Request, res as Response);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            UserManagementController.ERROR_INVALID_RECORD_ID_FORMAT);
+    });
+
+    it('create will return BAD_REQUEST if no manager id was provided', async () => {
+        const validManagementRecord = getValidManagementRecord();
+        const req = mockRequest({}, {
+            userId: validManagementRecord.user.id,
+            startDate: validManagementRecord.startDate
+        });
+        const res = mockResponse();
+
+        await userManagementController.create(req as Request, res as Response);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            UserManagementController.ERROR_INVALID_RECORD_ID_FORMAT);
+    });
+
+    it('create will return BAD_REQUEST if no start date was provided', async () => {
+        const validManagementRecord = getValidManagementRecord();
+        const req = mockRequest({}, {
+            userId: validManagementRecord.user.id,
+            managerId: validManagementRecord.manager.id
+        });
+        const res = mockResponse();
+
+        await userManagementController.create(req as Request, res as Response);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            UserManagementController.ERROR_INVALID_DATE_FORMAT);
+    });
+
+    it('create will return BAD_REQUEST if invalid start date format was provided', async () => {
+        const validManagementRecord = getValidManagementRecord();
+        const req = mockRequest({}, {
+            startDate: new Date("InvalidFormat"),
+            userId: validManagementRecord.user.id,
+            managerId: validManagementRecord.manager.id
+        });
+        const res = mockResponse();
+
+        await userManagementController.create(req as Request, res as Response);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            UserManagementController.ERROR_INVALID_DATE_FORMAT);
+    });
+
     it('Create will return a valid record and return CREATED status when supplied with valid details', async () => {
         const validManagementRecord = getValidManagementRecord();
         const req = mockRequest({}, {
@@ -117,7 +183,7 @@ describe('UserManagement', () => {
     it('End Management returns a BAD_REQUEST if no id is provided', async () => {
         const validManagementRecord = getValidManagementRecord();
         const req = mockRequest({},
-            { endDate: new Date(2026,1,1) });
+            { endDate: new Date(2026, 1, 1) });
         const res = mockResponse();
 
         await userManagementController.endManagement(req as Request, res as Response);
@@ -137,12 +203,25 @@ describe('UserManagement', () => {
 
         expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
             StatusCodes.BAD_REQUEST,
-            UserManagementController.ERROR_END_DATE_REQUIRED);
+            UserManagementController.ERROR_INVALID_DATE_FORMAT);
+    });
+
+    it('End Management returns a BAD_REQUEST if incorrect date format is provided', async () => {
+        const validManagementRecord = getValidManagementRecord();
+        const req = mockRequest({ id: validManagementRecord.id },
+            { endDate: new Date("InvalidFomat") });
+        const res = mockResponse();
+
+        await userManagementController.endManagement(req as Request, res as Response);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            UserManagementController.ERROR_INVALID_DATE_FORMAT);
     });
 
     it('End Management returns NOT_FOUND if the record id does not exist', async () => {
         const validManagementRecord = getValidManagementRecord();
-        validManagementRecord.endDate = new Date(2026,1,1);
+        validManagementRecord.endDate = new Date(2026, 1, 1);
         const req = mockRequest({ id: INVALID_RECORD_NUMBER },
             { endDate: validManagementRecord.endDate });
         const res = mockResponse();

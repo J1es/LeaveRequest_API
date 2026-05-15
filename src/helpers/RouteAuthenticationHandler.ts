@@ -1,8 +1,8 @@
 import { Response, NextFunction } from "express";
 import { IAuthenticatedJWTRequest } from "../types/IAuthenticatedJWTRequest";
-import { ResponseHandler } from "../helpers/ResponseHandler";
+import { ResponseHandler } from "./ResponseHandler";
 import { StatusCodes } from "http-status-codes";
-import { Logger } from "../helpers/Logger";
+import { Logger } from "./Logger";
 
 export function isAdmin(
     req: IAuthenticatedJWTRequest,

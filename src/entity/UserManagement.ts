@@ -10,7 +10,7 @@ export class UserManagement {
     id!: number;
 
     @ManyToOne(() => User)
-    @IsNotEmpty({ message: 'Manager is required' })
+    @IsNotEmpty({ message: 'User is required' })
     user!: User;
  
     @ManyToOne(() => User)

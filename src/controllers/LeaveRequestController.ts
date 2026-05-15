@@ -37,7 +37,7 @@ export class LeaveRequestController {
 
             const userId = signedInUser?.id;
 
-            if (!userId || typeof userId !== "number") {
+            if (!userId) {
                 ResponseHandler.sendErrorResponse(
                     res,
                     StatusCodes.BAD_REQUEST,
@@ -64,7 +64,11 @@ export class LeaveRequestController {
             const user = await this.userRepository.findOne({ where: { id: userId } });
 
             if (!user) {
-                throw new Error(LeaveRequestController.ERROR_USER_NOT_FOUND)
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    LeaveRequestController.ERROR_USER_NOT_FOUND
+                );
+                return
             }
 
             if (daysRequested > user.leaveBalance) {
@@ -153,7 +157,7 @@ export class LeaveRequestController {
 
             if (!request) {
                 ResponseHandler.sendErrorResponse(res,
-                    StatusCodes.NOT_FOUND, 
+                    StatusCodes.NOT_FOUND,
                     LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
                 return;
             }
@@ -315,7 +319,7 @@ export class LeaveRequestController {
 
             if (!request) {
                 ResponseHandler.sendErrorResponse(res,
-                    StatusCodes.NOT_FOUND, 
+                    StatusCodes.NOT_FOUND,
                     LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
                 return;
             }
@@ -356,12 +360,13 @@ export class LeaveRequestController {
             await this.userRepository.save(request.user);
             await this.leaveRequestRepository.save(request);
 
-            ResponseHandler.sendSuccessResponse(res, {
-                message: `Leave request ${request.leaveRequestId} for employee_id ${request.user.id} has been Rejected`,
+            ResponseHandler.sendSuccessResponse(res,
+                {message: `Leave request ${request.leaveRequestId} for employee_id ${request.user.id} has been Rejected`,
                 data: {
                     reason: request.reason
-                }
-            });
+                }},
+                StatusCodes.OK
+            );
 
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
@@ -385,7 +390,7 @@ export class LeaveRequestController {
 
             if (!employee) {
                 ResponseHandler.sendErrorResponse(res,
-                    StatusCodes.NOT_FOUND, 
+                    StatusCodes.NOT_FOUND,
                     LeaveRequestController.ERROR_EMPLOYEE_NOT_FOUND);
                 return;
             }
@@ -427,10 +432,12 @@ export class LeaveRequestController {
                 reason: request.reason
             }));
 
-            ResponseHandler.sendSuccessResponse(res, {
-                message: `Status of leave requests for employee_id ${employeeId}`,
+            ResponseHandler.sendSuccessResponse(res, 
+                {message: `Status of leave requests for employee_id ${employeeId}`,
                 data: formattedRequests
-            });
+                },
+                StatusCodes.OK
+            );
 
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
@@ -484,10 +491,12 @@ export class LeaveRequestController {
                 return;
             }
 
-            ResponseHandler.sendSuccessResponse(res, {
-                message: `Status of leave requests for employee_id ${employeeId}`,
-                data: {"days remaining" : employee.leaveBalance}
-            });
+            ResponseHandler.sendSuccessResponse(res, 
+                {message: `Status of leave requests for employee_id ${employeeId}`,
+                data: { "days remaining": employee.leaveBalance }
+            },
+            StatusCodes.OK
+            );
 
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);

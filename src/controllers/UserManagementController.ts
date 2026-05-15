@@ -10,10 +10,10 @@ export class UserManagementController {
 
     public static readonly ERROR_FAILED_TO_RETRIEVE_MANAGEMENT = "Failed to retrieve user management records";
     public static readonly ERROR_INVALID_RECORD_ID_FORMAT = "Invalid ID format";
-    public static readonly ERROR_END_DATE_REQUIRED = "endDate is required";
+    public static readonly ERROR_INVALID_DATE_FORMAT = "Invalid Date format";
     public static readonly ERROR_RECORD_NOT_FOUND_WITH_ID = (id: number) => `Management Record not found with ID: ${id}`;
 
-    constructor(private userManagementRepository: Repository<UserManagement>) {}
+    constructor(private userManagementRepository: Repository<UserManagement>) { }
 
     public getAll = async (req: Request, res: Response): Promise<void> => {
         try {
@@ -37,10 +37,26 @@ export class UserManagementController {
         try {
             const { userId, managerId, startDate } = req.body;
 
+            if (isNaN(userId) || isNaN(managerId)) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    UserManagementController.ERROR_INVALID_RECORD_ID_FORMAT);
+                return;
+            }
+
+            const parsedStartDate = new Date(startDate);
+
+            if (isNaN(parsedStartDate.getTime())) {
+                ResponseHandler.sendErrorResponse(res,
+                    StatusCodes.BAD_REQUEST,
+                    UserManagementController.ERROR_INVALID_DATE_FORMAT);
+                return;
+            }
+
             const record = new UserManagement();
             record.user = { id: userId } as User;
             record.manager = { id: managerId } as User;
-            record.startDate = new Date(startDate);
+            record.startDate = parsedStartDate;
 
             const errors = await validate(record);
             if (errors.length > 0) {
@@ -73,11 +89,13 @@ export class UserManagementController {
                 return;
             }
 
-            if (!endDate) {
+            const parsedEndDate = new Date(endDate);
+
+            if (isNaN(parsedEndDate.getTime())) {
                 ResponseHandler.sendErrorResponse(
                     res,
                     StatusCodes.BAD_REQUEST,
-                    UserManagementController.ERROR_END_DATE_REQUIRED
+                    UserManagementController.ERROR_INVALID_DATE_FORMAT
                 );
                 return;
             }
@@ -96,7 +114,7 @@ export class UserManagementController {
                 return;
             }
 
-            record.endDate = new Date(endDate);
+            record.endDate = parsedEndDate;
 
             const errors = await validate(record);
             if (errors.length > 0) {
