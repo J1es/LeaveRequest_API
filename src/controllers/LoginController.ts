@@ -32,7 +32,7 @@ export class LoginController implements ILoginController  {
             const user = await this.userRepository.createQueryBuilder("user")
                 .addSelect(["user.password",
                     "user.salt"])
-                .leftJoinAndSelect("user.role", "role") //Join role
+                .leftJoinAndSelect("user.role", "role")
                 .where("user.email = :email", { email: email })
                 .getOne();
 
