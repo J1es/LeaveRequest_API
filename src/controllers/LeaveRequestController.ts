@@ -162,8 +162,8 @@ export class LeaveRequestController {
                 return;
             }
 
-            const isOwner = request.user.id == userId;
-            const isAdmin = userRole?.name == "admin";
+            const isOwner = (request.user.id == userId);
+            const isAdmin = (userRole?.name == "admin");
 
             if (!isOwner && !isAdmin) {
                 Logger.warn(
@@ -208,8 +208,9 @@ export class LeaveRequestController {
                     start_date: request.startDate,
                     end_date: request.endDate,
                     status: request.status
-                }
-            });
+                }},
+                StatusCodes.OK
+            );
 
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);
@@ -287,12 +288,13 @@ export class LeaveRequestController {
             await this.userRepository.save(request.user);
             await this.leaveRequestRepository.save(request);
 
-            ResponseHandler.sendSuccessResponse(res, {
-                message: `Leave request ${request.leaveRequestId} for employee_id ${request.user.id} has been approved`,
+            ResponseHandler.sendSuccessResponse(res, 
+                {message: `Leave request ${request.leaveRequestId} for employee_id ${request.user.id} has been approved`,
                 data: {
                     reason: request.reason
-                }
-            });
+                }},
+                StatusCodes.OK
+        );
 
         } catch (error: any) {
             ResponseHandler.sendErrorResponse(res, StatusCodes.BAD_REQUEST, error.message);

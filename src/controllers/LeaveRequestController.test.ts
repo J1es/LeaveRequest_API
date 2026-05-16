@@ -10,7 +10,6 @@ import { Request, Response } from 'express';
 import * as classValidator from "class-validator";
 import { mock } from "jest-mock-extended";
 import { IAuthenticatedJWTRequest } from '../types/IAuthenticatedJWTRequest';
-import { Validation } from '../helpers/Validation';
 
 jest.mock('../helpers/ResponseHandler');
 
@@ -288,6 +287,775 @@ describe('LeaveRequestController', () => {
         );
     });
 
-    
+    it('Leave request approve returns FORBIDDEN if manager is not mangager of leave request user', async () => {
+        const validManager = getValidManagerData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserManagementRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.approveLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.FORBIDDEN,
+            LeaveRequestController.ERROR_NOT_ALLOWED);
+    });
+
+    it('Leave request successfully cancelled when request owner performs the action', async () => {
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validLeaveRequest.user.id, email: validLeaveRequest.user.email, role: validLeaveRequest.user.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserRepository.save.mockResolvedValue(validLeaveRequest.user);
+        mockLeaveRequestRepository.save.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res, {
+            message: "Leave request cancelled successfully",
+            reason: validLeaveRequest.reason,
+            data: {
+                id: validLeaveRequest.leaveRequestId,
+                employee_id: validLeaveRequest.user.id,
+                start_date: validLeaveRequest.startDate,
+                end_date: validLeaveRequest.endDate,
+                status: validLeaveRequest.status
+            }
+        },
+            StatusCodes.OK)
+    });
+
+    it('Leave request successfully cancelled when an admin performs the action', async () => {
+        const validUser = getValidAdminData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserRepository.save.mockResolvedValue(validLeaveRequest.user);
+        mockLeaveRequestRepository.save.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res, {
+            message: "Leave request cancelled successfully",
+            reason: validLeaveRequest.reason,
+            data: {
+                id: validLeaveRequest.leaveRequestId,
+                employee_id: validLeaveRequest.user.id,
+                start_date: validLeaveRequest.startDate,
+                end_date: validLeaveRequest.endDate,
+                status: validLeaveRequest.status
+            }
+        },
+            StatusCodes.OK)
+    });
+
+    it('Leave request cancel returns a BAD_REQUEST if invalid leave request ID format is entered', async () => {
+        const validUser = getValidStaffData();
+
+        const req = {
+            body: {
+                leaveRequestId: "InvalidFormat",
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_INVALID_ID_FORMAT);
+    });
+
+    it('Leave request cancel returns FORBIDDEN if user is not owner of leave request user', async () => {
+        const validUser = getValidStaffData();
+        const validLeaveRequest = getValidLeaveRequest();
+        validLeaveRequest.user.id += 1;
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.FORBIDDEN,
+            LeaveRequestController.ERROR_NOT_ALLOWED);
+    });
+
+    it('Leave request cancel returns a BAD_REQUEST if leave request is already cancelled', async () => {
+        const validUser = getValidStaffData();
+        const validLeaveRequest = getValidLeaveRequest();
+        validLeaveRequest.status = LeaveStatus.Cancelled;
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_LEAVE_REQUEST_ALREADY_CANCELLED);
+    });
+
+    it('Leave request cancel returns a BAD_REQUEST if leave request is rejected', async () => {
+        const validUser = getValidStaffData();
+        const validLeaveRequest = getValidLeaveRequest();
+        validLeaveRequest.status = LeaveStatus.Rejected;
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_CANNOT_CANCEL_REJECTED);
+    });
+
+    it('Leave request successfully approved when valid manager performs the action', async () => {
+        const validManager = getValidManagerData();
+        const validMangement = getValidManagementRecord();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserManagementRepository.findOne.mockResolvedValue(validMangement);
+        mockUserRepository.save.mockResolvedValue(validLeaveRequest.user);
+        mockLeaveRequestRepository.save.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.approveLeave(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Leave request ${validLeaveRequest.leaveRequestId} for employee_id ${validLeaveRequest.user.id} has been approved`,
+                data: {
+                    reason: validLeaveRequest.reason
+                }
+            },
+            StatusCodes.OK);
+    });
+
+    it('Leave request successfully approved when an admin performs the action', async () => {
+        const validUser = getValidAdminData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserRepository.save.mockResolvedValue(validLeaveRequest.user);
+        mockLeaveRequestRepository.save.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.approveLeave(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Leave request ${validLeaveRequest.leaveRequestId} for employee_id ${validLeaveRequest.user.id} has been approved`,
+                data: {
+                    reason: validLeaveRequest.reason
+                }
+            },
+            StatusCodes.OK);
+    });
+
+    it('Leave request approve returns FORBIDDEN if manager is not mangager of leave request user', async () => {
+        const validManager = getValidManagerData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserManagementRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.approveLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.FORBIDDEN,
+            LeaveRequestController.ERROR_NOT_ALLOWED);
+    });
+
+    it('Leave request approve returns a BAD_REQUEST if invalid leave request ID format is entered', async () => {
+        const validManager = getValidManagerData();
+
+        const req = {
+            body: {
+                leaveRequestId: "InvalidFormat",
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        await leaveRequestController.approveLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_INVALID_ID_FORMAT);
+    });
+
+    it('Leave request approve returns NOT_FOUND if leave request isnt found', async () => {
+        const validManager = getValidManagerData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.cancelLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.NOT_FOUND,
+            LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
+    });
+
+    it('Leave request approve returns a BAD_REQUEST if request is already approved', async () => {
+        const validManager = getValidAdminData();
+        const validLeaveRequest = getValidLeaveRequest();
+        validLeaveRequest.status = LeaveStatus.Approved;
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.approveLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_ONLY_PENDING_APPROVED);
+    });
+
+    it('Leave request successfully rejected when valid manager performs the action', async () => {
+        const validManager = getValidManagerData();
+        const validMangement = getValidManagementRecord();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserManagementRepository.findOne.mockResolvedValue(validMangement);
+        mockUserRepository.save.mockResolvedValue(validLeaveRequest.user);
+        mockLeaveRequestRepository.save.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.rejectLeave(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Leave request ${validLeaveRequest.leaveRequestId} for employee_id ${validLeaveRequest.user.id} has been Rejected`,
+                data: {
+                    reason: validLeaveRequest.reason
+                }
+            },
+            StatusCodes.OK);
+    });
+
+    it('Leave request successfully rejected when an admin performs the action', async () => {
+        const validUser = getValidAdminData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserRepository.save.mockResolvedValue(validLeaveRequest.user);
+        mockLeaveRequestRepository.save.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.rejectLeave(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Leave request ${validLeaveRequest.leaveRequestId} for employee_id ${validLeaveRequest.user.id} has been Rejected`,
+                data: {
+                    reason: validLeaveRequest.reason
+                }
+            },
+            StatusCodes.OK);
+    });
+
+    it('Leave request reject returns a BAD_REQUEST if manager is not mangager of leave request user', async () => {
+        const validManager = getValidManagerData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+        mockUserManagementRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.rejectLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.FORBIDDEN,
+            LeaveRequestController.ERROR_NOT_ALLOWED);
+    });
+
+    it('Leave request reject returns a BAD_REQUEST if invalid leave request ID format is entered', async () => {
+        const validManager = getValidManagerData();
+
+        const req = {
+            body: {
+                leaveRequestId: "InvalidFormat",
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        await leaveRequestController.rejectLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_INVALID_ID_FORMAT);
+    });
+
+    it('Leave request reject returns NOT_FOUND if leave request isnt found', async () => {
+        const validManager = getValidManagerData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.rejectLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.NOT_FOUND,
+            LeaveRequestController.ERROR_LEAVE_REQUEST_NOT_FOUND);
+    });
+
+    it('Leave request reject returns a BAD_REQUEST if request is already rejected', async () => {
+        const validManager = getValidAdminData();
+        const validLeaveRequest = getValidLeaveRequest();
+        validLeaveRequest.status = LeaveStatus.Rejected;
+
+        const req = {
+            body: {
+                leaveRequestId: validLeaveRequest.leaveRequestId,
+                reason: "ValidString"
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockLeaveRequestRepository.findOne.mockResolvedValue(validLeaveRequest);
+
+        await leaveRequestController.rejectLeave(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_ONLY_PENDING_REJECTED);
+    });
+
+    it('Get Leave status successfully returns employee leave status (as Admin)', async () => {
+        const validAdmin = getValidAdminData();
+        const validStaff = getValidStaffData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validAdmin.id, email: validAdmin.email, role: validAdmin.role }
+        const res = {} as unknown as Response;
+
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+        mockLeaveRequestRepository.find.mockResolvedValue([validLeaveRequest]);
+
+        await leaveRequestController.leaveStatus(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Status of leave requests for employee_id ${validStaff.id}`,
+                data: [
+                    {
+                        id: validLeaveRequest.leaveRequestId,
+                        start_date: validLeaveRequest.startDate.toISOString().split("T")[0],
+                        end_date: validLeaveRequest.endDate.toISOString().split("T")[0],
+                        status: validLeaveRequest.status,
+                        reason: validLeaveRequest.reason
+                    }
+                ]
+            },
+            StatusCodes.OK);
+    });
+
+    it('Get Leave status successfully returns employee leave status (as Manager)', async () => {
+        const validManager = getValidManagerData();
+        const validManagement = getValidManagementRecord();
+        const validStaff = getValidStaffData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+        mockUserManagementRepository.findOne.mockResolvedValue(validManagement);
+        mockLeaveRequestRepository.find.mockResolvedValue([validLeaveRequest]);
+
+        await leaveRequestController.leaveStatus(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Status of leave requests for employee_id ${validStaff.id}`,
+                data: [
+                    {
+                        id: validLeaveRequest.leaveRequestId,
+                        start_date: validLeaveRequest.startDate.toISOString().split("T")[0],
+                        end_date: validLeaveRequest.endDate.toISOString().split("T")[0],
+                        status: validLeaveRequest.status,
+                        reason: validLeaveRequest.reason
+                    }
+                ]
+            },
+            StatusCodes.OK);
+    });
+
+    it('Get Leave status successfully returns leave status (as Staff)', async () => {
+        const validStaff = getValidStaffData();
+        const validLeaveRequest = getValidLeaveRequest();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validStaff.id, email: validStaff.email, role: validStaff.role }
+        const res = {} as unknown as Response;
+
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+        mockUserManagementRepository.findOne.mockResolvedValue(null);
+        mockLeaveRequestRepository.find.mockResolvedValue([validLeaveRequest]);
+
+        await leaveRequestController.leaveStatus(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Status of leave requests for employee_id ${validStaff.id}`,
+                data: [
+                    {
+                        id: validLeaveRequest.leaveRequestId,
+                        start_date: validLeaveRequest.startDate.toISOString().split("T")[0],
+                        end_date: validLeaveRequest.endDate.toISOString().split("T")[0],
+                        status: validLeaveRequest.status,
+                        reason: validLeaveRequest.reason
+                    }
+                ]
+            },
+            StatusCodes.OK);
+    });
+
+    it('Get Leave status returns BAD_REQUEST if invalid employee ID is provided', async () => {
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: "InvalidFormat",
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validStaff.id, email: validStaff.email, role: validStaff.role }
+        const res = {} as unknown as Response;
+
+        await leaveRequestController.leaveStatus(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_INVALID_ID_FORMAT);
+    });
+
+    it('Get Leave status returns NOT_FOUND if employee is not found from employee ID', async () => {
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id + 1,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validStaff.id, email: validStaff.email, role: validStaff.role }
+        const res = {} as unknown as Response;
+
+        await leaveRequestController.leaveStatus(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.NOT_FOUND,
+            LeaveRequestController.ERROR_EMPLOYEE_NOT_FOUND);
+    });
+
+    it('Get Leave status returns FORBIDDEN if user does not have access to employee records', async () => {
+        const validManager = getValidManagerData();
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+
+        await leaveRequestController.leaveStatus(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.FORBIDDEN,
+            LeaveRequestController.ERROR_NOT_ALLOWED);
+    });
+
+    it('Get remaining days successfully returns employee remaining days (as Admin)', async () => {
+        const validAdmin = getValidAdminData();
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validAdmin.id, email: validAdmin.email, role: validAdmin.role }
+        const res = {} as unknown as Response;
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+        mockUserManagementRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.remainingDays(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Status of leave requests for employee_id ${validStaff.id}`,
+                data: { "days remaining": validStaff.leaveBalance }
+            },
+            StatusCodes.OK
+        );
+    });
+
+    it('Get remaining days successfully returns employee remaining days (as Manager)', async () => {
+        const validManager = getValidManagerData();
+        const validManagement = getValidManagementRecord();
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+        mockUserManagementRepository.findOne.mockResolvedValue(validManagement);
+
+        await leaveRequestController.remainingDays(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Status of leave requests for employee_id ${validStaff.id}`,
+                data: { "days remaining": validStaff.leaveBalance }
+            },
+            StatusCodes.OK
+        );
+    });
+
+    it('Get remaining days successfully returns employee remaining days (as Staff)', async () => {
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validStaff.id, email: validStaff.email, role: validStaff.role }
+        const res = {} as unknown as Response;
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+
+        await leaveRequestController.remainingDays(req, res);
+
+        expect(ResponseHandler.sendSuccessResponse).toHaveBeenCalledWith(res,
+            {
+                message: `Status of leave requests for employee_id ${validStaff.id}`,
+                data: { "days remaining": validStaff.leaveBalance }
+            },
+            StatusCodes.OK
+        );
+    });
+
+    it('Get remaining days returns BAD_REQUEST if invalid employee ID is provided', async () => {
+        const validUser = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: "InvalidFormat",
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        await leaveRequestController.remainingDays(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.BAD_REQUEST,
+            LeaveRequestController.ERROR_INVALID_ID_FORMAT);
+    });
+
+    it('Get remaining days returns NOT_FOUND if employee cannot be found from employee ID', async () => {
+        const validUser = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validUser.id + 1,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validUser.id, email: validUser.email, role: validUser.role }
+        const res = {} as unknown as Response;
+
+        mockUserRepository.findOne.mockResolvedValue(null);
+
+        await leaveRequestController.remainingDays(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.NOT_FOUND,
+            LeaveRequestController.ERROR_EMPLOYEE_NOT_FOUND);
+    });
+
+
+    it('Get remaining days returns FORBIDDEN if user does not have access to employee', async () => {
+        const validManager = getValidManagerData();
+        const validStaff = getValidStaffData();
+
+        const req = {
+            params: {
+                employee_id: validStaff.id,
+            }
+        } as unknown as IAuthenticatedJWTRequest;
+        req.signedInUser = { id: validManager.id, email: validManager.email, role: validManager.role }
+        const res = {} as unknown as Response;
+
+        mockUserRepository.findOne.mockResolvedValue(validStaff);
+
+        await leaveRequestController.remainingDays(req, res);
+
+        expect(ResponseHandler.sendErrorResponse).toHaveBeenCalledWith(res,
+            StatusCodes.FORBIDDEN,
+            LeaveRequestController.ERROR_NOT_ALLOWED);
+    })
 
 });
