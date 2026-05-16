@@ -17,6 +17,7 @@ export class LeaveRequestRouter implements IRouter {
     public getRouter(): Router {
         return this.router;
     }
+    
     private addRoutes() {
         this.router.post('/', this.leaveRequestController.requestLeave);
         this.router.delete('/', this.leaveRequestController.cancelLeave);
