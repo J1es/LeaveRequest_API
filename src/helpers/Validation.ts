@@ -10,10 +10,11 @@ export class Validation {
     }
 
     public static daysBetween(start: Date, end: Date): number {
+        const milliSecondsInDay: number = 86400000 ;
         const startUTC = Date.UTC(start.getFullYear(), start.getMonth(), start.getDate());
         const endUTC = Date.UTC(end.getFullYear(), end.getMonth(), end.getDate());
 
-        return Math.floor((endUTC - startUTC) / 86400000) + 1;
+        return Math.floor((endUTC - startUTC) / milliSecondsInDay) + 1;
     }
 
 }
