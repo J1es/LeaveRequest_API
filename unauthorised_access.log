@@ -188,3 +188,15 @@
 {"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-16 02:44:05"}
 {"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-16 02:44:05"}
 {"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-16 02:44:05"}
+{"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-17 01:02:36"}
+{"level":"warn","message":"Unauthorised access attempt by staff@email.com (role: staff)","timestamp":"2026-05-17 01:02:36"}
+{"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-17 01:02:36"}
+{"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-17 01:02:36"}
+{"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-17 01:02:36"}
+{"level":"warn","message":"Unauthorised access attempt by manager@email.com (role: manager)","timestamp":"2026-05-17 01:02:36"}
+{"level":"warn","message":"Unauthorised access attempt: No signed-in user","timestamp":"2026-05-17 15:06:51"}
+{"level":"warn","message":"Unauthorised access attempt: No signed-in user","timestamp":"2026-05-17 15:07:49"}
+{"level":"warn","message":"Unauthorised access attempt: No signed-in user","timestamp":"2026-05-17 15:08:51"}
+{"level":"warn","message":"Unauthorised access attempt: No signed-in user","timestamp":"2026-05-17 15:08:52"}
+{"level":"warn","message":"Unauthorised access attempt: No signed-in user","timestamp":"2026-05-17 15:08:55"}
+{"level":"warn","message":"Unauthorised access attempt by staff2@email.com (role: staff)","timestamp":"2026-05-17 15:18:23"}

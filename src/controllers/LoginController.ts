@@ -1,7 +1,6 @@
 import { User } from '../entity/User';
 import { UserDTOToken } from '../UserDTOToken';
 import { Repository } from "typeorm";
-import { ResponseHandler } from '../helpers/ResponseHandler';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import { PasswordHandler } from '../helpers/PasswordHandler';
